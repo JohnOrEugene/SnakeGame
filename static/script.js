@@ -8,12 +8,16 @@ let intervalId = null;
 const size = 20;
 
 document.addEventListener('keydown', (e) => {
-    const keys = {ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT'};
-    if (keys[e.key]) direction = keys[e.key];
+    const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+    if (validKeys.includes(e.key)) {
+        direction = e.key;
+    }
 });
+
 
 function draw(state) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     if (state.game_over) {
         ctx.fillStyle = 'red';
         ctx.font = '30px Arial';
@@ -22,16 +26,17 @@ function draw(state) {
         restartBtn.style.display = 'inline-block';
         return;
     }
-
+    // SCORE
+    document.getElementById('score').innerText = `Score: ${state.score}`;
     ctx.fillStyle = 'lime';
     for (let [x, y] of state.snake) {
         ctx.fillRect(x * size, y * size, size - 1, size - 1);
     }
-
     ctx.fillStyle = 'red';
     let [fx, fy] = state.food;
     ctx.fillRect(fx * size, fy * size, size - 1, size - 1);
 }
+
 
 function update() {
     fetch('/move', {
@@ -60,16 +65,7 @@ startBtn.addEventListener('click', () => {
     startGameLoop();
 });
 
-restartBtn.addEventListener('click', () => {
-    fetch('/restart').then(() => {
-        direction = 'RIGHT';
-        restartBtn.style.display = 'none';
-        startGameLoop();
-    });
-});
-
-let scoreElement = document.getElementById('score');
-
+/*
 function drawGame(state) {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = '#0f0';
@@ -90,3 +86,4 @@ function drawGame(state) {
         document.getElementById("restartButton").style.display = "block";
     }
 }
+*/

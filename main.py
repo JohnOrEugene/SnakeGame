@@ -15,8 +15,19 @@ def state():
 @app.route('/move', methods=['POST'])
 def move():
     direction = request.json.get('direction')
-    game.change_direction(direction)
-    game.update()
+
+    directions = {
+        'ArrowUp': (0, -1),
+        'ArrowDown': (0, 1),
+        'ArrowLeft': (-1, 0),
+        'ArrowRight': (1, 0)
+    }
+
+    if direction in directions:
+        dx, dy = directions[direction]
+        game.change_direction(dx, dy)
+
+    game.move()
     return jsonify(success=True)
 
 @app.route('/restart')
