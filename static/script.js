@@ -2,41 +2,44 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
+const scoreElement = document.getElementById('score');
 
 let direction = 'RIGHT';
 let intervalId = null;
 const size = 20;
 
 document.addEventListener('keydown', (e) => {
-    const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-    if (validKeys.includes(e.key)) {
-        direction = e.key;
-    }
+    const keys = {
+        ArrowUp: 'UP',
+        ArrowDown: 'DOWN',
+        ArrowLeft: 'LEFT',
+        ArrowRight: 'RIGHT'
+    };
+    if (keys[e.key]) direction = keys[e.key];
 });
-
 
 function draw(state) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (state.game_over) {
-        ctx.fillStyle = 'red';
-        ctx.font = '30px Arial';
-        ctx.fillText("Game Over", canvas.width / 2 - 70, canvas.height / 2);
-        stopGameLoop();
-        restartBtn.style.display = 'inline-block';
-        return;
-    }
-    // SCORE
-    document.getElementById('score').innerText = `Score: ${state.score}`;
     ctx.fillStyle = 'lime';
     for (let [x, y] of state.snake) {
         ctx.fillRect(x * size, y * size, size - 1, size - 1);
     }
+
     ctx.fillStyle = 'red';
     let [fx, fy] = state.food;
     ctx.fillRect(fx * size, fy * size, size - 1, size - 1);
-}
 
+    scoreElement.innerText = `Score: ${state.score}`;
+
+    if (state.game_over) {
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.fillText("Game Over", canvas.width / 2 - 70, canvas.height / 2);
+        stopGameLoop();
+        restartBtn.style.display = 'inline-block';
+    }
+}
 
 function update() {
     fetch('/move', {
@@ -65,25 +68,10 @@ startBtn.addEventListener('click', () => {
     startGameLoop();
 });
 
-/*
-function drawGame(state) {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#0f0';
-    state.snake.forEach(([x, y]) => {
-        context.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+restartBtn.addEventListener('click', () => {
+    fetch('/restart').then(() => {
+        direction = 'RIGHT';
+        restartBtn.style.display = 'none';
+        startGameLoop();
     });
-    context.fillStyle = '#f00';
-    let [fx, fy] = state.food;
-    context.fillRect(fx * gridSize, fy * gridSize, gridSize, gridSize);
-
-    scoreElement.innerText = `Score: ${state.score}`;
-
-    if (state.game_over) {
-        context.fillStyle = '#fff';
-        context.font = '20px Arial';
-        context.fillText("Game Over", canvas.width / 2 - 50, canvas.height / 2);
-        clearInterval(gameInterval);
-        document.getElementById("restartButton").style.display = "block";
-    }
-}
-*/
+});
