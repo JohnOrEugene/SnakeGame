@@ -11,7 +11,7 @@
             margin-top: 30px;
         }
         canvas {
-            background-color: #111;
+            background-color: #3d37b1;
             display: block;
             margin: 20px auto;
         }
@@ -31,7 +31,7 @@
             display: none;
         }
     </style>
-</head>
+</head> 
 <body>
     <h1>🟩 Snake Game</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
@@ -40,6 +40,33 @@
         <button id="startBtn">▶ START GAME</button>
         <button id="restartBtn">🔄 RESTART</button>
     </div>
+    <label for="difficulty">Режим:</label>
+    <select id="difficulty">
+        <option value="easy">Easy mode</option>
+        <option value="hard">Hard mode</option>
+    </select>
+
+    <script>
+        document.getElementById('startBtn').onclick = function () {
+            let difficulty = document.getElementById('difficulty').value;
+            fetch('/start?difficulty=' + difficulty)  // Передача сложности на сервер
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('restartBtn').style.display = 'inline-block'; // Показываем кнопку рестарта по-центру
+                });                
+        };
+
+        document.getElementById('restartBtn').onclick = function () {
+            let difficulty = document.getElementById('difficulty').value;  // Получаем выбранный режим
+            fetch('/restart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: difficulty })  // Отправляем выбранный режим на сервер
+            }).then(() => {
+                fetch('/start?difficulty=' + difficulty);  // Стартуем игру с выбранной сложностью
+            });
+        };
+    </script>
     <script src="/static/script.js"></script>
 </body>
 </html>

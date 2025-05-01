@@ -1,21 +1,23 @@
 import random
 
 class Snake:
-    def __init__(self):
-        self.body = [(5, 5)]
-        self.direction = 'RIGHT'
+    def __init__(self, start_pos=(5, 5)):
+        self.body = [start_pos]
+        self.direction = (1, 0)  # движение вправо по умолчанию
         self.grow_pending = False
 
-    def change_direction(self, direction):
-        opposite = {'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT'}
-        if direction != opposite.get(self.direction):
-            self.direction = direction
+    def set_direction(self, dx, dy):
+        if (dx, dy) != (-self.direction[0], -self.direction[1]):
+            self.direction = (dx, dy)
 
-    def move(self):
+    def move(self, width, height, wrap=False):
         head_x, head_y = self.body[0]
-        delta = {'UP': (0, -1), 'DOWN': (0, 1), 'LEFT': (-1, 0), 'RIGHT': (1, 0)}
-        dx, dy = delta[self.direction]
+        dx, dy = self.direction
         new_head = (head_x + dx, head_y + dy)
+
+        if wrap:
+            new_head = (new_head[0] % width, new_head[1] % height)
+        
         self.body.insert(0, new_head)
         if not self.grow_pending:
             self.body.pop()
@@ -25,70 +27,85 @@ class Snake:
     def grow(self):
         self.grow_pending = True
 
-    def collides_with_self(self):
-        return self.body[0] in self.body[1:]
-
     def get_head(self):
         return self.body[0]
 
-class Food:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.position = self.random_position()
+    def collides_with_self(self):
+        return self.get_head() in self.body[1:]
 
-    def random_position(self):
-        return (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
 
 class Game:
-    def __init__(self, width=20, height=20):
+    def __init__(self, width=20, height=20, difficulty='easy'):
         self.width = width
         self.height = height
-        self.reset()
+        self.difficulty = difficulty
+        self.reset(difficulty)
 
-    def reset(self):
-        self.snake = [(5, 5)]
-        self.direction = (0, 1)
-        self.spawn_food()
-        self.game_over = False
+    def reset(self, difficulty='easy'):
+        self.difficulty = difficulty
+        self.snake = Snake()
         self.score = 0
+        self.game_over = False
+        self.food = None
+        self.bombs = []
+        self.spawn_food()
+        self.spawn_bombs()
+
+    def change_direction(self, dx, dy):
+        self.snake.set_direction(dx, dy)
 
     def spawn_food(self):
-        import random
         while True:
-            self.food = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
-            if self.food not in self.snake:
+            pos = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+            if pos not in self.snake.body and pos not in self.bombs:
+                self.food = pos
                 break
+
+    def spawn_bombs(self):
+        count = 3 if self.difficulty == 'easy' else 6
+        self.bombs = []
+        while len(self.bombs) < count:
+            pos = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+            if pos not in self.snake.body and pos != self.food and pos not in self.bombs:
+                self.bombs.append(pos)
 
     def move(self):
         if self.game_over:
             return
 
-        head = self.snake[0]
-        new_head = (head[0] + self.direction[0], head[1] + self.direction[1])
+        head_x, head_y = self.snake.get_head()
+        dx, dy = self.snake.direction
+        new_head = (head_x + dx, head_y + dy)
 
-        if (new_head in self.snake or
-            not (0 <= new_head[0] < self.width) or
-            not (0 <= new_head[1] < self.height)):
+        if not (0 <= new_head[0] < self.width) or not (0 <= new_head[1] < self.height):
+            if self.difficulty == 'easy':
+                wrap = True
+            else:
+                self.game_over = True
+                return
+        else:
+            wrap = False
+
+        if new_head in self.snake.body:
             self.game_over = True
             return
 
-        self.snake.insert(0, new_head)
-        if new_head == self.food:
-            self.spawn_food()
-            self.score += 1
-        else:
-            self.snake.pop()
+        if new_head in self.bombs:
+            self.game_over = True
+            return
 
-    def change_direction(self, dx, dy):
-        if (dx, dy) != (-self.direction[0], -self.direction[1]):
-            self.direction = (dx, dy)
+        self.snake.move(self.width, self.height, wrap)
+
+        if self.snake.get_head() == self.food:
+            self.snake.grow()
+            self.score += 1
+            self.spawn_food()
 
     def get_state(self):
         return {
-            'snake': self.snake,
+            'snake': self.snake.body,
             'food': self.food,
+            'bombs': self.bombs,
             'game_over': self.game_over,
             'score': self.score
         }
-
