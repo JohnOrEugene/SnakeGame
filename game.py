@@ -60,14 +60,29 @@ class Game:
             if pos not in self.snake.body and pos not in self.bombs:
                 self.food = pos
                 break
-
+            
     def spawn_bombs(self):
         count = 3 if self.difficulty == 'easy' else 6
+
+        head_x, head_y = self.snake.get_head()
+        dx, dy = self.snake.direction
+        
+        if self.difficulty == 'easy':
+            forbidden = ((head_x + dx) % self.width, (head_y + dy) % self.height)
+        else:
+            forbidden = (head_x + dx, head_y + dy)
+
         self.bombs = []
         while len(self.bombs) < count:
-            pos = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
-            if pos not in self.snake.body and pos != self.food and pos not in self.bombs:
+            pos = (random.randint(0, self.width - 1),
+                random.randint(0, self.height - 1))
+
+            if (pos not in self.snake.body
+                and pos != self.food
+                and pos != forbidden
+                and pos not in self.bombs):
                 self.bombs.append(pos)
+            
 
     def move(self):
         if self.game_over:
@@ -100,6 +115,7 @@ class Game:
             self.snake.grow()
             self.score += 1
             self.spawn_food()
+            self.spawn_bombs()
 
     def get_state(self):
         return {
@@ -107,5 +123,6 @@ class Game:
             'food': self.food,
             'bombs': self.bombs,
             'game_over': self.game_over,
-            'score': self.score
+            'score': self.score,
+            'direction': self.snake.direction
         }

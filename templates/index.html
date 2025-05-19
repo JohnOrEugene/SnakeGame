@@ -49,21 +49,21 @@
     <script>
         document.getElementById('startBtn').onclick = function () {
             let difficulty = document.getElementById('difficulty').value;
-            fetch('/start?difficulty=' + difficulty)  // Передача сложности на сервер
+            fetch('/start?difficulty=' + difficulty) 
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('restartBtn').style.display = 'inline-block'; // Показываем кнопку рестарта по-центру
+                    document.getElementById('restartBtn').style.display = 'inline-block';
                 });                
         };
 
         document.getElementById('restartBtn').onclick = function () {
-            let difficulty = document.getElementById('difficulty').value;  // Получаем выбранный режим
+            let difficulty = document.getElementById('difficulty').value;
             fetch('/restart', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: difficulty })  // Отправляем выбранный режим на сервер
+                body: JSON.stringify({ mode: difficulty }) 
             }).then(() => {
-                fetch('/start?difficulty=' + difficulty);  // Стартуем игру с выбранной сложностью
+                fetch('/start?difficulty=' + difficulty);  
             });
         };
     </script>
